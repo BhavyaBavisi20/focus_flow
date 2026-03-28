@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import cron from 'node-cron';
 import { google } from 'googleapis';
 import pool from '../db.js';
@@ -22,27 +22,18 @@ function makeOAuth2Client() {
 
 // ─── Email ────────────────────────────────────────────────────────────────────
 
-function getMailTransport() {
-  const pass = (process.env.EMAIL_APP_PASSWORD || '').replace(/\s/g, '');
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
-  });
-}
-
 async function sendEmail(to, subject, text) {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD) {
-    throw new Error('EMAIL_USER and EMAIL_APP_PASSWORD are not set in .env');
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is not set');
   }
-  await getMailTransport().sendMail({
-    from: `"FocusFlow" <${process.env.EMAIL_USER}>`,
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: 'FocusFlow <onboarding@resend.dev>',
     to,
     subject,
     text,
   });
+  if (error) throw new Error(error.message);
 }
 
 // ─── Google Calendar ──────────────────────────────────────────────────────────
