@@ -4,7 +4,7 @@ import axios from 'axios';
 function buildBaseURL() {
   const raw = import.meta.env.VITE_API_URL;
   if (!raw) return '/api';
-  const stripped = raw.replace(/\/+$/, ''); // remove trailing slashes
+  const stripped = raw.trim().replace(/\/+$/, ''); // trim whitespace and remove trailing slashes
   return stripped.endsWith('/api') ? stripped : `${stripped}/api`;
 }
 
